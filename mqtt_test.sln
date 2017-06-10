@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.12
+VisualStudioVersion = 15.0.26430.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mqtt_device", "mqtt_device\mqtt_device.csproj", "{8C2E7E70-F147-4E83-8EFE-0105D7B94E01}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mqttprometheusgw", "mqttprometheusgw\mqttprometheusgw.csproj", "{12957572-38F6-40BD-AE20-51DACC7CA24B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{8C2E7E70-F147-4E83-8EFE-0105D7B94E01}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8C2E7E70-F147-4E83-8EFE-0105D7B94E01}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8C2E7E70-F147-4E83-8EFE-0105D7B94E01}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12957572-38F6-40BD-AE20-51DACC7CA24B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12957572-38F6-40BD-AE20-51DACC7CA24B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12957572-38F6-40BD-AE20-51DACC7CA24B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12957572-38F6-40BD-AE20-51DACC7CA24B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
