@@ -59,7 +59,7 @@ namespace mqtt_device
     {
       Console.WriteLine("Type 'q' to quit");
       
-      var client = new uPLibrary.Networking.M2Mqtt.MqttClient("127.0.0.1");
+      var client = new uPLibrary.Networking.M2Mqtt.MqttClient("grissom.klingon");
       client.Connect(Guid.NewGuid().ToString());
       Random r = new Random((int)(DateTime.Now.Ticks + (long)Environment.CurrentManagedThreadId));
       string text = null;
@@ -95,7 +95,8 @@ namespace mqtt_device
     private static void _subscribe()
     {
       //System.Threading.Timer tmr;
-      var client = new uPLibrary.Networking.M2Mqtt.MqttClient("127.0.0.1");
+      var client = new uPLibrary.Networking.M2Mqtt.MqttClient("192.168.9.21");
+      client.ProtocolVersion = uPLibrary.Networking.M2Mqtt.MqttProtocolVersion.Version_3_1;
       client.Connect(Guid.NewGuid().ToString());
 
       client.Subscribe(new string[] {"house/serverroom/temp"}, new byte[] { 0});
