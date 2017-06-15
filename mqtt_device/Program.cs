@@ -1,30 +1,59 @@
-﻿using System;
+﻿using Microsoft.Extensions.Configuration;
+using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace mqtt_device
 {
+  using Microsoft.Extensions.Logging;
   
   class Program
   {
     static void Main(string[] args)
     {
+      ILoggerFactory logfactory = new Microsoft.Extensions.Logging.LoggerFactory();
       Random r = new Random((int)(DateTime.Now.Ticks + (long)Environment.CurrentManagedThreadId));
-      var mode = 1;
 
-      {
-        Console.WriteLine("Mode (1=listen,2=publish)");
-        string m = Console.ReadLine();
-        mode = int.Parse(m);
-      }
+      IConfigurationRoot config = new ConfigurationBuilder()
+        .AddJsonFile("appsettings.json", optional: false)
+        .Build();
+      var cfg = config.Get<MqttConfig>();
+
+      logfactory.AddConsole(true);
+
+
+      switch(cfg.mode)
+        {
+          case(1):
+          case(2):
+            { break; }
+          default:
+          {
+            Console.WriteLine("Mode (1=listen,2=publish)");
+            string m = Console.ReadLine();
+            cfg.mode = int.Parse(m);
+            break;
+          }
+        };
       
-      if (mode == 2)
+      switch(cfg.mode)
         {
-          var t = _publish().Result;
+          case (2):
+          {
+            Console.WriteLine("publishing!");
+            var t = _publish().Result;
+            break;
+          }
+          case (1):
+          {
+            Console.WriteLine("subscribing!");
+            var xm = new XamMqtt(cfg, logfactory.CreateLogger<XamMqtt>());
+            xm.subscribe();
+            //_subscribe(cfg);
+            break;            
+          }
         }
-      if (mode == 1)
-        {
-          _subscribe();
-        }
+
  /*
       if (mode == 1)
         {
@@ -77,13 +106,12 @@ namespace mqtt_device
 
       } while(text != "q");
       
-
       client.Disconnect();
 
       return 1;
     }
 
-    private static async System.Threading.Tasks.Task<double> _SendMsg(Random r)
+    private static async Task<double> _SendMsg(Random r)
     {
       double x = r.NextDouble() * 100.0;
       var bytes = System.Text.Encoding.UTF8.GetBytes(string.Format("{{ \"temp\":{0} }}",x));
@@ -92,18 +120,34 @@ namespace mqtt_device
       return x;
     }
 
-    private static void _subscribe()
+    private static void _subscribe(MqttConfig cfg)
     {
       //System.Threading.Timer tmr;
-      var client = new uPLibrary.Networking.M2Mqtt.MqttClient("192.168.9.21");
-      client.ProtocolVersion = uPLibrary.Networking.M2Mqtt.MqttProtocolVersion.Version_3_1;
-      client.Connect(Guid.NewGuid().ToString());
+      //"192.168.9.21"
 
-      client.Subscribe(new string[] {"house/serverroom/temp"}, new byte[] { 0});
-
+      var client = new uPLibrary.Networking.M2Mqtt.MqttClient(cfg.server);
+      client.ProtocolVersion = uPLibrary.Networking.M2Mqtt.MqttProtocolVersion.Version_3_1_1;
       client.MqttMsgSubscribed += Client_MqttMsgSubscribed;
       client.MqttMsgPublishReceived += Client_MqttMsgPublishReceived;
       client.MqttMsgPublished += Client_MqttMsgPublished;
+
+      if (!string.IsNullOrWhiteSpace(cfg.username))
+        { client.Connect(Guid.NewGuid().ToString(), cfg.username, cfg.password); }
+      else
+        { client.Connect(Guid.NewGuid().ToString()); }
+
+      var channels = new List<string>();
+      var qoss = new List<byte>();
+      {
+        foreach(var s in cfg.subscriptions)
+          {
+            channels.Add(s.channel);
+            qoss.Add(s.qos);
+          }
+      }
+      
+      /*client.Subscribe(new string[] {"house/serverroom/temp"}, new byte[] { 0});*/
+      client.Subscribe(channels.ToArray(), qoss.ToArray());
       
       Console.WriteLine("Type 'q' to quit");
       string text = null;
@@ -122,6 +166,8 @@ namespace mqtt_device
     private static void Client_MqttMsgPublishReceived(object sender, uPLibrary.Networking.M2Mqtt.Messages.MqttMsgPublishEventArgs e)
     {
       Console.WriteLine("{0} {1}", e.Topic, System.Text.Encoding.UTF8.GetString(e.Message));
+
+
     }
 
     private static void Client_MqttMsgSubscribed(object sender, uPLibrary.Networking.M2Mqtt.Messages.MqttMsgSubscribedEventArgs e)
