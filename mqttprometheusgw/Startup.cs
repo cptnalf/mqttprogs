@@ -28,7 +28,9 @@ namespace mqttprometheusgw
         public void ConfigureServices(IServiceCollection services)
         {
             // Add framework services.
+            services.AddMemoryCache();
             services.AddMvc();
+            services.Configure<MqttSettings>(Configuration.GetSection("MqttSettings"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
