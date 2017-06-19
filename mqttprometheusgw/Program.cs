@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 
+/*
+ * https://docs.microsoft.com/en-us/aspnet/core/publishing/linuxproduction
+ */
+
 namespace mqttprometheusgw
 {
     public class Program
