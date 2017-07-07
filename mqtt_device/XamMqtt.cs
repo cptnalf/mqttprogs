@@ -73,5 +73,40 @@ namespace mqtt_device
       cli.Dispose();
       disp.Dispose();
     }
+
+    public async void publish(string clientid)
+    {
+      var r = new Random(Environment.CurrentManagedThreadId + (int)DateTime.Now.Ticks);
+      var cli = await MqttClient.CreateAsync(_config.server).ConfigureAwait(false);
+
+      await cli.ConnectAsync(new MqttClientCredentials(clientid)).ConfigureAwait(false);
+
+      string topic = string.Format("clients/{0}", clientid);
+      await cli.PublishAsync(new MqttApplicationMessage(topic, new byte[] { 1}), MqttQualityOfService.AtLeastOnce)
+        .ConfigureAwait(false);
+
+      Console.WriteLine("Type 'q' to quit (enter to publish)");
+      string text = null;
+      do {
+        r.Next();
+
+        if ((r.Next(10000) % 2) == 0) { topic = "house/serverroom/temp"; }
+        else { topic = "house/garage/temp"; }
+
+        float f = (float)(r.NextDouble() * 100.0d);
+        byte[] bytes = new byte[8];
+        bytes[0] = 2;
+        bytes[1] = 2;
+        { var b1 = BitConverter.GetBytes(f); for(int i=0; i<b1.Length; ++i) { bytes[2+i] = b1[i]; } }
+
+        await cli.PublishAsync(new MqttApplicationMessage(topic, bytes), MqttQualityOfService.AtLeastOnce).ConfigureAwait(false);
+
+        text = Console.ReadLine();
+      } while(text != "q");
+
+      await cli.DisconnectAsync();
+      cli.Dispose();
+      cli = null;
+    }
   }
 }
