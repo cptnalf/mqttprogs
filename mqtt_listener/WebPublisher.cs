@@ -29,7 +29,7 @@ namespace mqtt_listener
       var client = new HttpClient();
       client.Timeout = TimeSpan.FromSeconds(10.0);
 
-      var url = _config.publish.url;
+      var url = _config.publish.uri;
       /* @TODO lookup channel url if it's configured */
 
       var t = await client.PutAsync(url, new StringContent(payload, Encoding.UTF8));

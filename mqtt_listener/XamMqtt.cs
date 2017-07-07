@@ -21,26 +21,21 @@ namespace mqtt_listener
       _obs = obs;
     }
 
-    public void subscribe()
+    public async void subscribe()
     {
-      var cli = 
-        (
+      var cli = await
         MqttClient.CreateAsync(_config.server)
         .ConfigureAwait(false)
-        )
-        .GetAwaiter()
-        .GetResult();
+        ;
       var disp = cli.MessageStream.SubscribeSafe(_obs);
       
       var clientid = "mqtt2web";
-      cli.ConnectAsync(new MqttClientCredentials(clientid)).ConfigureAwait(false).GetAwaiter().GetResult();
+      await cli.ConnectAsync(new MqttClientCredentials(clientid)).ConfigureAwait(false);
 
-      cli.SubscribeAsync("clients/#", MqttQualityOfService.AtLeastOnce).ConfigureAwait(false).GetAwaiter().GetResult();
+      await cli.SubscribeAsync("clients/#", MqttQualityOfService.AtLeastOnce).ConfigureAwait(false);
 
       foreach(var s in _config.subscriptions)
-        {
-          AsyncContext.Run(() => cli.SubscribeAsync(s.channel, MqttQualityOfService.AtLeastOnce));
-        }
+        { await cli.SubscribeAsync(s.channel, MqttQualityOfService.AtLeastOnce).ConfigureAwait(false); }
 
      /*
      cli.PublishAsync(new MqttApplicationMessage("house/serverroom/temp", Encoding.UTF8.GetBytes("89.9")), MqttQualityOfService.AtLeastOnce);
@@ -52,9 +47,11 @@ namespace mqtt_listener
         text = Console.ReadLine();
       } while(text != "q");
 
-      cli.DisconnectAsync();
+      await cli.DisconnectAsync();
       cli.Dispose();
       disp.Dispose();
+      cli = null;
+      disp = null;
     }
   }
 }

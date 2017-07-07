@@ -14,8 +14,13 @@ namespace mqtt_listener
     static Regex _TempTopic = new Regex("(.+)/temp", RegexOptions.Compiled);
 
     private ILogger<TopicObserver> _logger;
+    private WebPublisher _pub;
 
-    public TopicObserver(ILogger<TopicObserver> l) { _logger = l; }
+    public TopicObserver(ILogger<TopicObserver> l, WebPublisher pub) 
+    { 
+      _logger = l; 
+      _pub = pub; 
+    }
 
     public void OnCompleted()
     {
@@ -49,8 +54,27 @@ namespace mqtt_listener
               ChannelValueType type = (ChannelValueType)value.Payload[0];
               ChannelUnit units = (ChannelUnit)value.Payload[1];
 
-              string msg = Encoding.UTF8.GetString(value.Payload);
-              _logger.LogInformation("{0} - {1}", value.Topic, msg);
+              decimal d = decimal.Zero;
+              switch(type)
+                {
+                  case ChannelValueType.t_float:
+                  {
+                    float f = BitConverter.ToSingle(value.Payload, 2);
+                    d = Convert.ToDecimal(f);
+                    break;
+                  }
+                  
+                  case ChannelValueType.t_int:
+                  {
+                    int i = BitConverter.ToInt32(value.Payload, 2);
+                    d = Convert.ToDecimal(i);
+                    break;
+                  }
+                }
+              
+              _pub.publish(name, d, units);
+
+              _logger.LogInformation("{0} - {1} {2} {3}", value.Topic, name, units, d);
             }
         }
     }

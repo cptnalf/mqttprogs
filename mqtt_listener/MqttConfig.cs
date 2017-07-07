@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace mqtt_listener
 {
@@ -26,9 +28,15 @@ namespace mqtt_listener
 
   public class PublishConfig
   {
-    public string url {get;set;}
+    private Uri _uri;
 
+    public string url {get;set;}
+    public Uri uri {get { return _uri; } }
+    
     public List<ChannelPub> channels {get;set;}
+
+    public PublishConfig() { channels = new List<ChannelPub>(); }
+    public void init() { _uri = new Uri(url); }
   }
 
   public class ChannelSub
@@ -48,6 +56,10 @@ namespace mqtt_listener
     
     public List<ChannelSub> subscriptions {get;set;}
 
-    public MqttConfig() { subscriptions = new List<ChannelSub>(); }
+    public MqttConfig() { subscriptions = new List<ChannelSub>(); publish = new PublishConfig(); }
+    public void init()
+    {
+      publish.init();
+    }
   }
 }

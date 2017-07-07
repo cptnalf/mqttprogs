@@ -14,12 +14,13 @@ namespace mqtt_listener
         .AddJsonFile("appsettings.json", optional: false)
         .Build();
       var cfg = config.Get<MqttConfig>();
+      cfg.init();
       
       var sc = new ServiceCollection();
       sc
         .AddLogging()
         .AddTransient<IObserver<System.Net.Mqtt.MqttApplicationMessage>,TopicObserver>()
-        .AddTransient<WebPublisher>
+        .AddTransient<WebPublisher>()
         .AddTransient<XamMqtt>()
         .AddSingleton<MqttConfig>(cfg)
         ;
