@@ -8,10 +8,20 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace mqttprometheusgw.Controllers
 {
-  public class MqttMessage
+  public class MetricMsg
   {
+    public enum ChannelUnit
+    {
+      none
+      ,deg_c
+      ,deg_f
+      ,psi
+      ,volts
+    }
+
     public string channel {get;set;}
-    public string msg {get;set;}
+    public decimal value {get;set;}
+    public string units {get;set;}
   }
 
   public class IoTTemp
@@ -54,16 +64,46 @@ namespace mqttprometheusgw.Controllers
     }
 
     [HttpPut("save")]
-    public IActionResult Save([FromBody] MqttMsg message)
+    public IActionResult Save([FromBody] MetricMsg message)
     {
+      MetricMsg.ChannelUnit unit;
+      if (!Enum.TryParse(message.units, out unit)) { return this.StatusCode(400, message.units); }
+      if (string.IsNullOrWhiteSpace(message.channel)) { return StatusCode(400, "No channel"); }
+
+      var parts = message.channel.Split('/');
+      var key = string.Format("{0}-{1}", parts[parts.Length -1], unit);
       
       var entry = _cache.CreateEntry(key);
       if (null == _keys.FirstOrDefault(x => string.Compare(x, key) == 0)) { _keys.Add(key); }
 
       entry.AbsoluteExpirationRelativeToNow = new TimeSpan(0,1,30);
-      var itt = new IoTTemp { instance="inst", value=tempc};
-      entry.Value = itt;
-      itt.valuef = (itt.value + 32.0M) * 9.00M/5.00M;
+      switch(unit)
+        {
+          case (MetricMsg.ChannelUnit.deg_c):
+          case (MetricMsg.ChannelUnit.deg_f):
+            {
+              var itt = new IoTTemp { src=parts[parts.Length -1], };
+              entry.Value = itt;
+
+              if (unit == MetricMsg.ChannelUnit.deg_c)
+                {
+                  itt.value = message.value;
+                  itt.valuef = (itt.value * 9.00M/5.00M) + 32.0M;
+                }
+              else
+                {
+                  itt.valuef = message.value;
+                  itt.value = (itt.valuef - 32.00M)* 5.00M/9.00M;
+                }
+
+              break;
+            }
+
+          default:
+            {
+              return StatusCode(400, string.Format("Units not mapped: {0}",message.units));
+            }
+        }
       return Ok();
     }
   }
